@@ -1,4 +1,4 @@
-setlocal suffixedadd=.erl,.hrl
+setlocal suffixesadd=.erl,.hrl
 
 let &l:include = '^\s*-\%(include\|include_lib\)\s*("\zs\f*\ze")'
 let &l:define  = '^\s*-\%(define\|record\|type\|opaque\)\|^\ze\l'
