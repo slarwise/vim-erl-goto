@@ -42,13 +42,13 @@ endfunction
 
 function ErlangGotoDefinition#variable(variable, action) abort
     let function_start_line_nr = search('^\l', 'bnW')
-    if function_start_line_nr < 1
+    if function_start_line_nr == 0
         let function_start_line_nr = 1
     endif
-    let file_contents = readfile(expand('%'))[function_start_line_nr-1:-1]
+    let lines = getline(function_start_line_nr, '.')
     let [matched_string, index, col_start, col_end] = matchstrpos(
-                \ file_contents, '\<' . a:variable . '\>')
-    if index < 0
+                \ lines, '\<' . a:variable . '\>')
+    if index == -1
         return 0
     endif
     let line_nr = index + function_start_line_nr

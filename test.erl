@@ -7,7 +7,7 @@
 main() ->
     4 = hej 1XEnd,
     X = 3,
-    3 = MyVar
+    3 = MyVar,
     ?PI,
     lists:member(X, [1, 2, 3]),
     X,
