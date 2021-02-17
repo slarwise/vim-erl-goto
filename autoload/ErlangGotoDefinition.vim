@@ -46,8 +46,7 @@ function ErlangGotoDefinition#variable(variable, action) abort
         let function_start_line_nr = 1
     endif
     let lines = getline(function_start_line_nr, '.')
-    let [matched_string, index, col_start, col_end] = matchstrpos(
-                \ lines, '\<' . a:variable . '\>')
+    let [_, index, col_start, _] = matchstrpos(lines, '\<' . a:variable . '\>')
     if index == -1
         return 0
     endif
@@ -94,23 +93,24 @@ function ErlangGotoDefinition#local(action) abort
 endfunction
 
 function ErlangGotoDefinition#external(thing, action) abort
-    let [module, function] = split(a:thing, ':')
+    let [module, symbol] = split(a:thing, ':')
     let module_path = s:FindFile(module . '.erl')
     if empty(module_path)
         return 0
     endif
-    let pattern = '^\(\|-type(\|-opaque(\)' . function
+    let pattern = '^\(\|-type(\|-opaque(\)\zs' . symbol
     let contents = readfile(module_path)
-    let line_nr = match(contents, pattern) + 1
-    if line_nr < 1
+    let [_, index, col_start, _] = matchstrpos(contents, pattern)
+    if index == 0
         return 0
     endif
+    let [line_nr, col_nr] = [index + 1, col_start + 1]
     if a:action == 'edit'
-        execute 'edit +' . line_nr . ' ' . module_path
+        execute 'edit +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
     elseif a:action == 'split'
-        execute 'split +' . line_nr . ' ' . module_path
+        execute 'split +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
     elseif a:action == 'vsplit'
-        execute 'vsplit +' . line_nr . ' ' . module_path
+        execute 'vsplit +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
     elseif a:action == 'echo'
         let file_contents = contents[line_nr-1:-1]
         let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
