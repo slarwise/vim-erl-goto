@@ -1,6 +1,6 @@
 setlocal suffixedadd=.erl,.hrl
 
-let &l:include = '^\s*-\%(include\|include_lib\)'
+let &l:include = '^\s*-\%(include\|include_lib\)\s*("\zs\f*\ze")'
 let &l:define  = '^\s*-\%(define\|record\|type\|opaque\)\|^\ze\l'
 
 if !g:erlang_no_mappings
