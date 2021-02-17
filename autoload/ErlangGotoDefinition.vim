@@ -42,9 +42,7 @@ endfunction
 
 function ErlangGotoDefinition#variable(variable, action) abort
     let function_start_line_nr = search('^\l', 'bnW')
-    if function_start_line_nr == 0
-        let function_start_line_nr = 1
-    endif
+    let function_start_line_nr = max([1, function_start_line_nr])
     let lines = getline(function_start_line_nr, '.')
     let [_, index, col_start, _] = matchstrpos(lines, '\<' . a:variable . '\>')
     if index == -1
