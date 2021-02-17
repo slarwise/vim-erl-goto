@@ -25,10 +25,10 @@ can exist:
 
 These mappings are defined by default
 
-- `gd` - Go to definition
-- `<C-W>d` - Go to definition in horizontal split
+- `gd` Go to definition
+- `<C-W>d` Go to definition in horizontal split
 - `<C-W><C-D>` Go to definition in vertical split
-- `[d` - Echo definition
+- `[d` Echo definition
 
 To define your own mappings, do
 
