@@ -8,12 +8,12 @@
 
 function ErlangGotoDefinition#GotoDefinitionUnderCursor(action) abort
     let thing_under_cursor = ErlangGotoDefinition#get_thing_under_cursor()
-    let goto_type = ErlangGotoDefinition#get_scope(thing_under_cursor)
-    if goto_type ==# 'variable'
+    let scope = ErlangGotoDefinition#get_scope(thing_under_cursor)
+    if scope ==# 'variable'
         let success = ErlangGotoDefinition#variable(thing_under_cursor, a:action)
-    elseif goto_type ==# 'local'
+    elseif scope ==# 'local'
         let success = ErlangGotoDefinition#local(a:action)
-    elseif goto_type ==# 'external'
+    elseif scope ==# 'external'
         let success = ErlangGotoDefinition#external(thing_under_cursor, a:action)
     else
         let success = 0
