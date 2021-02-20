@@ -96,7 +96,7 @@ function ErlangGotoDefinition#external(thing, action) abort
     if empty(module_path)
         return 0
     endif
-    let pattern = '^\(\|-type(\|-opaque(\)\zs' . symbol
+    let pattern = '^\(\|-type\s*\|-opaque\s*\)\zs' . symbol
     let contents = readfile(module_path)
     let [_, index, col_start, _] = matchstrpos(contents, pattern)
     if index == 0
