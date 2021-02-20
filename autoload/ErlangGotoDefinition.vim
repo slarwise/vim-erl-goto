@@ -59,6 +59,8 @@ function s:variable(variable, action) abort
         execute 'vsplit +call\ cursor(' . line_nr . ',' . col_nr . ')'
     elseif a:action == 'echo'
         echo getline(line_nr)
+    elseif a:action == 'float'
+        call s:DisplayInFloat(getline(line_nr, line_nr))
     endif
     return 1
 endfunction
@@ -71,7 +73,7 @@ function s:local(action) abort
             execute "normal! \<C-W>d"
         elseif a:action == 'vsplit'
             execute "vertical normal! \<C-W>d"
-        elseif a:action == 'echo'
+        elseif a:action == ('echo' || 'float')
             let dlist = execute('dlist ' . expand('<cword>'), 'silent')
             let dlist_lines = split(dlist, '\n')
             let filename = dlist_lines[0]
@@ -80,7 +82,12 @@ function s:local(action) abort
             let file_contents = readfile(expand(filename))
             let file_contents = file_contents[line_nr-1:-1]
             let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
-            echo join(file_contents[0:end_of_definition], "\n")
+            let contents = file_contents[0:end_of_definition]
+            if a:action == 'echo'
+                echo join(contents, "\n")
+            else
+                call s:DisplayInFloat(contents)
+            endif
         endif
     catch /^Vim\%((\a\+)\)\=:E387/
         return 0
@@ -113,6 +120,11 @@ function s:external(thing, action) abort
         let file_contents = contents[line_nr-1:-1]
         let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
         echo join(file_contents[0:end_of_definition], "\n")
+    elseif a:action == 'float'
+        let file_contents = contents[line_nr-1:-1]
+        let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
+        let contents = file_contents[0:end_of_definition]
+        call s:DisplayInFloat(contents)
     endif
     return 1
 endfunction
@@ -128,4 +140,37 @@ function! s:FindFile(fname) abort
         let path = findfile(fname)
     endif
     return path
+endfunction
+
+function! s:DisplayInFloat(contents) abort
+    let contents = s:Boxify(a:contents)
+    let buf = nvim_create_buf(v:false, v:true)
+    let width = max(map(deepcopy(contents), 'strdisplaywidth(v:val)'))
+    let height = len(contents)
+    call nvim_buf_set_lines(buf, 0, -1, v:true, contents)
+    call nvim_buf_set_option(buf, 'filetype', 'erlang')
+    let opts = {'relative': 'cursor', 'width': width, 'height': height,
+                \ 'col': 0, 'row': 1, 'anchor': 'NW', 'style': 'minimal'}
+    let g:erlang_goto_definition_float = nvim_open_win(buf, 0, opts)
+    call nvim_win_set_option(g:erlang_goto_definition_float, 'winhl', 'Normal:Normal')
+    call timer_start(0, 'ErlangGotoDefinition#CloseOnInput')
+endfunction
+
+function! s:Boxify(contents) abort
+    let width = max(map(deepcopy(a:contents), 'strdisplaywidth(v:val)'))
+    let height = len(a:contents)
+    let top    = '╭' . repeat('─', width) . '╮'
+    let bottom = '╰' . repeat('─', width) . '╯'
+
+    let contents = map(deepcopy(a:contents), '"│" . v:val')
+    let contents = map(deepcopy(contents),
+                \ 'v:val . repeat(" ", width-strdisplaywidth(v:val)+1) . "│"')
+    return [top] + contents + [bottom]
+endfunction
+
+function ErlangGotoDefinition#CloseOnInput(timer_id)
+    echohl Type | echo 'Press any key to close' | echohl None
+    call getchar()
+    echo ''
+    call nvim_win_close(g:erlang_goto_definition_float, 1)
 endfunction
