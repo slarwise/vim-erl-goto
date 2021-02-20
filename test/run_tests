@@ -1,0 +1,2 @@
+#!/bin/sh
+nvim -N -u NONE -c 'set runtimepath=..,$VIMRUNTIME,~/.config/nvim/plugged/vader.vim' -c 'runtime plugin/vader.vim' -c 'filetype plugin indent on' -c 'Vader!*' && echo Success || cat $VADER_OUTPUT_FILE
