@@ -1,0 +1,115 @@
+" nvim -N -u NONE -c 'set runtimepath=.,$VIMRUNTIME,~/.config/nvim/plugged/vader.vim' -c 'runtime plugin/vader.vim' -c 'filetype plugin indent on' -c 'Vader!*' && echo Success || cat $VADER_OUTPUT_FILE
+
+" To test:
+"   - Variables:
+"     - Go to
+"     - Echo
+"   - Include (use the same file):
+"     - Goto function, record, macro, type, opaque
+"     - Echo function, record, macro, type, opaque
+"   - External:
+"     - Goto function, type, opaque
+"     - Echo function, type, opaque
+
+After:
+  call delete('math.erl')
+
+" Variable {{{1
+Given erlang(Variable: goto):
+  Y = 4,
+  3 = X,
+  Xs = 4,
+  X = 3,
+  X.
+
+Do:
+  Ggdx
+
+Expect erlang:
+  Y = 4,
+  3 = ,
+  Xs = 4,
+  X = 3,
+  X.
+
+" Include in current file {{{1
+Given erlang(Include: goto function):
+  add(X, Y) -> X + Y.
+  sub(X, Y) -> X - Y.
+  main() ->
+    sub(1, 2).
+
+Do:
+  Ggdx
+
+Expect erlang:
+  add(X, Y) -> X + Y.
+  ub(X, Y) -> X - Y.
+  main() ->
+    sub(1, 2).
+
+Given erlang(Include: goto record):
+  -record(foo, {}).
+  main() ->
+    foo{}.
+
+Do:
+  Ggdx
+
+Expect erlang:
+  -record(oo, {}).
+  main() ->
+    foo{}.
+
+Given erlang(Include: goto type):
+  -type(foo, {}).
+  main() ->
+    foo{}.
+
+Do:
+  Ggdx
+
+Expect erlang:
+  -type(oo, {}).
+  main() ->
+    foo{}.
+
+Given erlang(Include: goto opaque):
+  -opaque(foo, {}).
+  main() ->
+    foo{}.
+
+Do:
+  Ggdx
+
+Expect erlang:
+  -opaque(oo, {}).
+  main() ->
+    foo{}.
+
+" External {{{1
+Given erlang(External: goto function):
+  math:sub(2, 1).
+
+Execute:
+  call writefile(['add(X, Y) -> X + Y.', 'sub(X, Y) -> X - Y.'], 'math.erl')
+  call ErlangGotoDefinition#GotoDefinitionUnderCursor('edit')
+  AssertEqual 'sub(X, Y) -> X - Y.', getline('.')
+
+Given erlang(External: goto type):
+  math:integer().
+
+Execute:
+  call writefile(['-type float() :: float().', '-type integer() :: integer().'], 'math.erl')
+  call ErlangGotoDefinition#GotoDefinitionUnderCursor('edit')
+  AssertEqual '-type integer() :: integer().', getline('.')
+
+Given erlang(External: goto opaque):
+  math:integer().
+
+Execute:
+  call writefile(['-opaque float() :: float().', '-opaque integer() :: integer().'], 'math.erl')
+  call ErlangGotoDefinition#GotoDefinitionUnderCursor('edit')
+  AssertEqual '-opaque integer() :: integer().', getline('.')
+
+" vim: foldmethod=marker
