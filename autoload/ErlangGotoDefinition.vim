@@ -174,8 +174,12 @@ endfunction
 
 function ErlangGotoDefinition#CloseOnInput(timer_id)
     echohl Type | echo 'Press any key to close' | echohl None
-    call getchar()
-    echo ''
-    call nvim_win_close(g:erlang_goto_definition_float['text_win'], 1)
-    call nvim_win_close(g:erlang_goto_definition_float['border_win'], 1)
+    try
+        call getchar()
+    catch /^Vim:Interrupt$/
+    finally
+        echo ''
+        call nvim_win_close(g:erlang_goto_definition_float['text_win'], 1)
+        call nvim_win_close(g:erlang_goto_definition_float['border_win'], 1)
+    endtry
 endfunction
