@@ -27,7 +27,4 @@ if !g:erlang_goto_definition_no_mappings
     if !hasmapto('<Plug>ErlangGotoDefinitionEcho')
         nmap <unique><buffer><silent> [d         <Plug>ErlangGotoDefinitionEcho
     endif
-    if !hasmapto('<Plug>ErlangGotoDefinitionFloat')
-        nmap <unique><buffer><silent> [f         <Plug>ErlangGotoDefinitionFloat
-    endif
 endif
