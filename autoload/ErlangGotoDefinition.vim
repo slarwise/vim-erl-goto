@@ -7,14 +7,14 @@
 "   - Echo external definition
 
 function ErlangGotoDefinition#GotoDefinitionUnderCursor(action) abort
-    let thing_under_cursor = ErlangGotoDefinition#get_thing_under_cursor()
-    let scope = ErlangGotoDefinition#get_scope(thing_under_cursor)
+    let thing_under_cursor = s:get_thing_under_cursor()
+    let scope = s:get_scope(thing_under_cursor)
     if scope ==# 'variable'
-        let success = ErlangGotoDefinition#variable(thing_under_cursor, a:action)
+        let success = s:variable(thing_under_cursor, a:action)
     elseif scope ==# 'local'
-        let success = ErlangGotoDefinition#local(a:action)
+        let success = s:local(a:action)
     elseif scope ==# 'external'
-        let success = ErlangGotoDefinition#external(thing_under_cursor, a:action)
+        let success = s:external(thing_under_cursor, a:action)
     else
         let success = 0
     endif
@@ -23,12 +23,12 @@ function ErlangGotoDefinition#GotoDefinitionUnderCursor(action) abort
     endif
 endfunction
 
-function ErlangGotoDefinition#get_thing_under_cursor() abort
+function s:get_thing_under_cursor() abort
     let pattern = '[#?]\?\(\i\|:\)*\%' . col('.') . 'c[#?]\?\(\i\|:\)*[(/]\?'
     return matchstr(getline('.'), pattern)
 endfunction
 
-function ErlangGotoDefinition#get_scope(thing) abort
+function s:get_scope(thing) abort
     if empty(a:thing)
         return ''
     elseif a:thing =~# ':'
@@ -40,7 +40,7 @@ function ErlangGotoDefinition#get_scope(thing) abort
     endif
 endfunction
 
-function ErlangGotoDefinition#variable(variable, action) abort
+function s:variable(variable, action) abort
     let function_start_line_nr = search('^\l', 'bnW')
     let function_start_line_nr = max([1, function_start_line_nr])
     let lines = getline(function_start_line_nr, '.')
@@ -63,7 +63,7 @@ function ErlangGotoDefinition#variable(variable, action) abort
     return 1
 endfunction
 
-function ErlangGotoDefinition#local(action) abort
+function s:local(action) abort
     try
         if a:action == 'edit'
             execute "normal! [\<C-D>"
@@ -90,7 +90,7 @@ function ErlangGotoDefinition#local(action) abort
     return 1
 endfunction
 
-function ErlangGotoDefinition#external(thing, action) abort
+function s:external(thing, action) abort
     let [module, symbol] = split(a:thing, ':')
     let module_path = s:FindFile(module . '.erl')
     if empty(module_path)
