@@ -8,6 +8,8 @@ Erlang source code.
 - Go to definition under cursor, either using the same window or in a new split
   (horizontal or vertical)
 - Echo the definition under the cursor without going to it
+- Open the definition under the cursor in a floating window (requires a recent
+  version of neovim)
 
 ## Supported definitions and declarations
 
@@ -37,6 +39,7 @@ nmap {yourmapping} <Plug>ErlangGotoDefinitionEdit
 nmap {yourmapping} <Plug>ErlangGotoDefinitionSplit
 nmap {yourmapping} <Plug>ErlangGotoDefinitionVsplit
 nmap {yourmapping} <Plug>ErlangGotoDefinitionEcho
+nmap {yourmapping} <Plug>ErlangGotoDefinitionFloat
 ```
 
 where `{yourmapping}` is the mapping you want to use. Set
