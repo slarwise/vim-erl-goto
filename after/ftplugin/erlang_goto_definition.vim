@@ -15,16 +15,16 @@ nnoremap <Plug>ErlangGotoDefinitionFloat
             \ :<C-U>call ErlangGotoDefinition#GotoDefinitionUnderCursor('float')<CR>
 
 if !g:erlang_goto_definition_no_mappings
-    if !hasmapto('<Plug>ErlangGotoDefinitionEdit')
+    if !hasmapto('<Plug>ErlangGotoDefinitionEdit')   && empty(mapcheck('gd'))
         nmap <unique><buffer><silent> gd         <Plug>ErlangGotoDefinitionEdit
     endif
-    if !hasmapto('<Plug>ErlangGotoDefinitionSplit')
+    if !hasmapto('<Plug>ErlangGotoDefinitionSplit')  && empty(mapcheck("\<C-W>d"))
         nmap <unique><buffer><silent> <C-W>d     <Plug>ErlangGotoDefinitionSplit
     endif
-    if !hasmapto('<Plug>ErlangGotoDefinitionVsplit')
+    if !hasmapto('<Plug>ErlangGotoDefinitionVsplit') && empty(mapcheck("\<C-W><C-D>"))
         nmap <unique><buffer><silent> <C-W><C-D> <Plug>ErlangGotoDefinitionVsplit
     endif
-    if !hasmapto('<Plug>ErlangGotoDefinitionEcho')
+    if !hasmapto('<Plug>ErlangGotoDefinitionEcho')   && empty(mapcheck('[d'))
         nmap <unique><buffer><silent> [d         <Plug>ErlangGotoDefinitionEcho
     endif
 endif
