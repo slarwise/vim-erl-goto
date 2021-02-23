@@ -145,41 +145,43 @@ endfunction
 function! s:DisplayInFloat(contents) abort
     let width = max(map(deepcopy(a:contents), 'strdisplaywidth(v:val)'))
     let height = len(a:contents)
-    let text_buf = nvim_create_buf(v:false, v:true)
-    call nvim_buf_set_lines(text_buf, 0, -1, v:true, a:contents)
-    call nvim_buf_set_option(text_buf, 'filetype', 'erlang')
-    let opts = {'relative': 'cursor', 'width': width, 'height': height,
-                \ 'col': 1, 'row': 2, 'anchor': 'NW', 'style': 'minimal'}
-    let g:erlang_goto_definition_float = {'text_win': nvim_open_win(text_buf, 0, opts)}
-    call nvim_win_set_option(g:erlang_goto_definition_float['text_win'],
-                \ 'winhl', 'Normal:Normal')
 
     let border_contents = s:CreateBorderFloatContents(width, height)
     let border_buf = nvim_create_buf(v:false, v:true)
     call nvim_buf_set_lines(border_buf, 0, -1, v:true, border_contents)
     let opts = {'relative': 'cursor', 'width': width+2, 'height': height+2,
                 \ 'col': 0, 'row': 1, 'anchor': 'NW', 'style': 'minimal'}
-    let g:erlang_goto_definition_float['border_win'] = nvim_open_win(border_buf, 0, opts)
-    call nvim_win_set_option(g:erlang_goto_definition_float['border_win'],
-                \ 'winhl', 'Normal:Normal')
+    let border_win = nvim_open_win(border_buf, v:false, opts)
+    call nvim_win_set_option(border_win, 'winhl', 'Normal:Normal')
 
-    call timer_start(0, 'ErlangGotoDefinition#CloseOnInput')
+    redraw
+
+    let [border_row, border_col] = nvim_win_get_position(border_win)
+    let [text_row, text_col] = [border_row+1, border_col+1]
+
+    let text_buf = nvim_create_buf(v:false, v:true)
+    call nvim_buf_set_lines(text_buf, 0, -1, v:true, a:contents)
+    call nvim_buf_set_option(text_buf, 'filetype', 'erlang')
+    let opts = {'relative': 'editor', 'width': width, 'height': height,
+                \ 'col': text_col, 'row': text_row, 'anchor': 'NW', 'style': 'minimal'}
+    let text_win = nvim_open_win(text_buf, v:true, opts)
+    call nvim_win_set_option(text_win, 'winhl', 'Normal:Normal')
+
+    redraw
+
+    echohl Type | echo 'Press any key to close' | echohl None
+    try
+        call getchar()
+    catch /^Vim:Interrupt$/
+    finally
+        execute "normal \<C-L>"
+        call nvim_win_close(text_win, 1)
+        call nvim_win_close(border_win, 1)
+    endtry
 endfunction
 
 function! s:CreateBorderFloatContents(width, height) abort
     let top    = '╭' . repeat('─', a:width) . '╮'
     let bottom = '╰' . repeat('─', a:width) . '╯'
     return [top] + map(range(a:height), '"│" . repeat(" ", a:width) . "│"') + [bottom]
-endfunction
-
-function ErlangGotoDefinition#CloseOnInput(timer_id)
-    echohl Type | echo 'Press any key to close' | echohl None
-    try
-        call getchar()
-    catch /^Vim:Interrupt$/
-    finally
-        echo ''
-        call nvim_win_close(g:erlang_goto_definition_float['text_win'], 1)
-        call nvim_win_close(g:erlang_goto_definition_float['border_win'], 1)
-    endtry
 endfunction
