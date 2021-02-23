@@ -116,15 +116,15 @@ function s:external(thing, action) abort
         execute 'split +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
     elseif a:action == 'vsplit'
         execute 'vsplit +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
-    elseif a:action == 'echo'
-        let file_contents = contents[line_nr-1:-1]
-        let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
-        echo join(file_contents[0:end_of_definition], "\n")
-    elseif a:action == 'float'
+    elseif a:action == ('echo' || 'float')
         let file_contents = contents[line_nr-1:-1]
         let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
         let contents = file_contents[0:end_of_definition]
-        call s:DisplayInFloat(contents)
+        if a:action == 'echo'
+            echo join(contents, "\n")
+        else
+            call s:DisplayInFloat(contents)
+        endif
     endif
     return 1
 endfunction
