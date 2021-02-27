@@ -1,26 +1,31 @@
-" Functionality:
-"   - Go to include definition using edit, split and vsplit
-"   - Echo include definition
-"   - Go to variable definition using edit, split and vsplit
-"   - Echo variable definition
-"   - Go to external definition using edit, split and vsplit
-"   - Echo external definition
+" TODO: Prioritize the found matches
+"       Create commands for listing all matches
+"       Maybe commands for all functionality
 
-function ErlangGotoDefinition#GotoDefinitionUnderCursor(action) abort
+function ErlangGotoDefinition#Do(action, count) abort
     let thing_under_cursor = s:get_thing_under_cursor()
     let scope = s:get_scope(thing_under_cursor)
-    if scope ==# 'variable'
-        let success = s:variable(thing_under_cursor, a:action)
-    elseif scope ==# 'local'
-        let success = s:local(a:action)
-    elseif scope ==# 'external'
-        let success = s:external(thing_under_cursor, a:action)
-    else
-        let success = 0
+    try
+        let matches = s:get_matches(scope, thing_under_cursor)
+    catch /^Vim\%((\a\+)\)\=:E38[78]/
+        let matches = []
+    endtry
+
+    if empty(matches)
+        return s:echo_warning('No definitions found')
+    elseif a:count > len(matches)
+        return s:echo_warning('Count higher than number of matches')
     endif
-    if !success
-        echohl WarningMsg | echo 'ErlangGotoDefinition: Failed' | echohl None
+
+    let context = s:get_context()
+
+    let [filename, line_nr, col_nr] = matches[a:count-1]
+    if index(['edit', 'split', 'vsplit'], a:action) != -1
+        return s:do_edit_action(a:action, filename, line_nr, col_nr)
+    elseif index(['echo', 'float'], a:action) != -1
+        return s:do_echo_action(a:action, filename, line_nr, scope)
     endif
+
 endfunction
 
 function s:get_thing_under_cursor() abort
@@ -40,96 +45,79 @@ function s:get_scope(thing) abort
     endif
 endfunction
 
-function s:variable(variable, action) abort
+function s:get_matches(scope, thing_under_cursor)
+    if a:scope ==# 'variable'
+        return s:variable_search(a:thing_under_cursor)
+    elseif a:scope ==# 'local'
+        return s:define_search()
+    elseif a:scope ==# 'external'
+        return s:external_search(a:thing_under_cursor)
+    endif
+endfunction
+
+function! s:echo_warning(message) abort
+    echohl WarningMsg
+    echo 'ErlangGotoDefinition: ' . a:message
+    echohl None
+endfunction
+
+function s:get_context() abort
+    return 'function'
+endfunction
+
+function s:variable_search(variable) abort
     let function_start_line_nr = search('^\l', 'bnW')
     let function_start_line_nr = max([1, function_start_line_nr])
     let lines = getline(function_start_line_nr, '.')
-    let [_, index, col_start, _] = matchstrpos(lines, '\<' . a:variable . '\>')
+    let [_, index, col, _] = matchstrpos(lines, '\<' . a:variable . '\>')
     if index == -1
-        return 0
+        return []
     endif
     let line_nr = index + function_start_line_nr
-    let col_nr = col_start + 1
-    if a:action == 'edit'
-        let pattern = '\%' . line_nr . 'l' . a:variable
-        let result = search(pattern, 'bsW')
-    elseif a:action == 'split'
-        execute 'split +call\ cursor(' . line_nr . ',' . col_nr . ')'
-    elseif a:action == 'vsplit'
-        execute 'vsplit +call\ cursor(' . line_nr . ',' . col_nr . ')'
-    elseif a:action == 'echo'
-        echo getline(line_nr)
-    elseif a:action == 'float'
-        call s:DisplayInFloat(getline(line_nr, line_nr))
-    endif
-    return 1
+    let col_nr = col + 1
+    return [[expand('%'), line_nr, col_nr]]
 endfunction
 
-function s:local(action) abort
-    try
-        if a:action == 'edit'
-            execute "normal! [\<C-D>"
-        elseif a:action == 'split'
-            execute "normal! \<C-W>d"
-        elseif a:action == 'vsplit'
-            execute "vertical normal! \<C-W>d"
-        elseif a:action == ('echo' || 'float')
-            let dlist = execute('dlist ' . expand('<cword>'), 'silent')
-            let dlist_lines = split(dlist, '\n')
-            let filename = dlist_lines[0]
-            let definition = dlist_lines[1]
-            let line_nr = split(definition)[1]
-            let file_contents = readfile(expand(filename))
-            let file_contents = file_contents[line_nr-1:-1]
-            let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
-            let contents = file_contents[0:end_of_definition]
-            if a:action == 'echo'
-                echo join(contents, "\n")
-            else
-                call s:DisplayInFloat(contents)
-            endif
-        endif
-    catch /^Vim\%((\a\+)\)\=:E387/
-        return 0
-    catch /^Vim\%((\a\+)\)\=:E388/
-        return 0
-    endtry
-    return 1
-endfunction
-
-function s:external(thing, action) abort
-    let [module, symbol] = split(a:thing, ':')
-    let module_path = s:FindFile(module . '.erl')
-    if empty(module_path)
-        return 0
-    endif
-    let pattern = '^\(\|-type\s*\|-opaque\s*\)\zs' . symbol
-    let contents = readfile(module_path)
-    let [_, index, col_start, _] = matchstrpos(contents, pattern)
-    if index == 0
-        return 0
-    endif
-    let [line_nr, col_nr] = [index + 1, col_start + 1]
-    if a:action == 'edit'
-        execute 'edit +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
-    elseif a:action == 'split'
-        execute 'split +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
-    elseif a:action == 'vsplit'
-        execute 'vsplit +call\ cursor(' . line_nr . ',' . col_nr . ') ' . module_path
-    elseif a:action == ('echo' || 'float')
-        let file_contents = contents[line_nr-1:-1]
-        let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
-        let contents = file_contents[0:end_of_definition]
-        if a:action == 'echo'
-            echo join(contents, "\n")
+function s:define_search() abort
+    let current_word = expand('<cword>')
+    let dlist = split(execute('dlist ' . current_word), '\n')
+    let matches = []
+    for line in dlist
+        if line[0] =~# '\s'
+            let definition_info = split(line)
+            let line_nr = str2nr(definition_info[1])
+            let definition = join(definition_info[2:])
+            let col = match(definition, current_word)
+            call add(matches, [filename, line_nr, col+1])
         else
-            call s:DisplayInFloat(contents)
+            let filename = line
         endif
-    endif
-    return 1
+    endfor
+    return matches
 endfunction
 
-function! s:FindFile(fname) abort
+function s:external_search(thing) abort
+    let [module, thing] = split(a:thing, ':')
+    let filename = s:find_file(module . '.erl')
+    if empty(filename)
+        return []
+    endif
+    let pattern = '^\(\|-type\s*\|-opaque\s*\)\zs' . thing
+    let contents = readfile(filename)
+    let start = 0
+    let matches = []
+    while 1
+        let [matched_string, index, col, _] = matchstrpos(contents, pattern, start)
+        if index == -1
+            break
+        endif
+        call add(matches, [filename, index+1, col+1])
+        let start = index + 1
+    endwhile
+    return matches
+endfunction
+
+function! s:find_file(fname) abort
     let path = findfile(a:fname)
     if !empty(path)
         return path
@@ -142,11 +130,37 @@ function! s:FindFile(fname) abort
     return path
 endfunction
 
-function! s:DisplayInFloat(contents) abort
+function! s:do_edit_action(action, filename, line_nr, col_nr) abort
+    if expand('%') ==# a:filename && a:action ==# 'edit'
+        mark '
+        call cursor(a:line_nr, a:col_nr)
+    else
+        let command = a:action . ' +call\ cursor(' . a:line_nr . ',' .
+                    \ a:col_nr . ') ' . a:filename
+        execute command
+    endif
+endfunction
+
+function! s:do_echo_action(action, filename, line_nr, scope) abort
+    if a:scope ==# 'variable'
+        let contents = getline(a:line_nr, a:line_nr)
+    else
+        let file_contents = readfile(a:filename)[a:line_nr-1:]
+        let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
+        let contents = file_contents[0:end_of_definition]
+    endif
+    if a:action ==# 'echo'
+        echo join(contents, "\n")
+    else
+        call s:display_in_float(contents)
+    endif
+endfunction
+
+function! s:display_in_float(contents) abort
     let width = max(map(deepcopy(a:contents), 'strdisplaywidth(v:val)'))
     let height = len(a:contents)
 
-    let border_contents = s:CreateBorderFloatContents(width, height)
+    let border_contents = s:create_border_float_contents(width, height)
     let border_buf = nvim_create_buf(v:false, v:true)
     call nvim_buf_set_lines(border_buf, 0, -1, v:true, border_contents)
     let opts = {'relative': 'cursor', 'width': width+2, 'height': height+2,
@@ -180,7 +194,7 @@ function! s:DisplayInFloat(contents) abort
     endtry
 endfunction
 
-function! s:CreateBorderFloatContents(width, height) abort
+function! s:create_border_float_contents(width, height) abort
     let top    = '╭' . repeat('─', a:width) . '╮'
     let bottom = '╰' . repeat('─', a:width) . '╯'
     return [top] + map(range(a:height), '"│" . repeat(" ", a:width) . "│"') + [bottom]

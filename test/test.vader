@@ -93,7 +93,7 @@ Given erlang(External: goto function):
 
 Execute:
   call writefile(['add(X, Y) -> X + Y.', 'sub(X, Y) -> X - Y.'], 'math.erl')
-  call ErlangGotoDefinition#GotoDefinitionUnderCursor('edit')
+  call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual 'sub(X, Y) -> X - Y.', getline('.')
 
 Given erlang(External: goto type):
@@ -101,7 +101,7 @@ Given erlang(External: goto type):
 
 Execute:
   call writefile(['-type float() :: float().', '-type integer() :: integer().'], 'math.erl')
-  call ErlangGotoDefinition#GotoDefinitionUnderCursor('edit')
+  call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual '-type integer() :: integer().', getline('.')
 
 Given erlang(External: goto opaque):
@@ -109,7 +109,7 @@ Given erlang(External: goto opaque):
 
 Execute:
   call writefile(['-opaque float() :: float().', '-opaque integer() :: integer().'], 'math.erl')
-  call ErlangGotoDefinition#GotoDefinitionUnderCursor('edit')
+  call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual '-opaque integer() :: integer().', getline('.')
 
 " vim: foldmethod=marker
