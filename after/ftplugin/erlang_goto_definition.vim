@@ -12,7 +12,9 @@ nnoremap <Plug>ErlangGotoDefinitionVsplit
 nnoremap <Plug>ErlangGotoDefinitionEcho
             \ :<C-U>call ErlangGotoDefinition#Do('echo',   v:count1)<CR>
 nnoremap <Plug>ErlangGotoDefinitionFloat
-            \ :<C-U>call ErlangGotoDefinition#Do('float',   v:count1)<CR>
+            \ :<C-U>call ErlangGotoDefinition#Do('float',  v:count1)<CR>
+nnoremap <Plug>ErlangGotoDefinitionList
+            \ :<C-U>call ErlangGotoDefinition#Do('list',  v:count1)<CR>
 
 if !g:erlang_goto_definition_no_mappings
     if !hasmapto('<Plug>ErlangGotoDefinitionEdit')   && empty(mapcheck('gd'))
@@ -26,5 +28,8 @@ if !g:erlang_goto_definition_no_mappings
     endif
     if !hasmapto('<Plug>ErlangGotoDefinitionEcho')   && empty(mapcheck('[d'))
         nmap <unique><buffer><silent> [d         <Plug>ErlangGotoDefinitionEcho
+    endif
+    if !hasmapto('<Plug>ErlangGotoDefinitionList')   && empty(mapcheck('[D'))
+        nmap <unique><buffer><silent> [D         <Plug>ErlangGotoDefinitionList
     endif
 endif

@@ -1,12 +1,10 @@
 " TODO: Prioritize the found matches
-"       Create commands for listing all matches
-"       Maybe commands for all functionality
 
 function ErlangGotoDefinition#Do(action, count) abort
-    let thing_under_cursor = s:get_thing_under_cursor()
-    let scope = s:get_scope(thing_under_cursor)
+    let thing = s:get_thing_under_cursor()
+    let scope = s:get_scope(thing)
     try
-        let matches = s:get_matches(scope, thing_under_cursor)
+        let matches = s:get_matches(scope, thing)
     catch /^Vim\%((\a\+)\)\=:E38[78]/
         let matches = []
     endtry
@@ -18,6 +16,15 @@ function ErlangGotoDefinition#Do(action, count) abort
     endif
 
     let context = s:get_context()
+
+    try
+        if a:action ==# 'list'
+            return s:list_matches(matches, scope)
+        endif
+    catch /^Vim:Interrupt$/
+        redraw
+        return
+    endtry
 
     let [filename, line_nr, col_nr] = matches[a:count-1]
     if index(['edit', 'split', 'vsplit'], a:action) != -1
@@ -45,13 +52,13 @@ function s:get_scope(thing) abort
     endif
 endfunction
 
-function s:get_matches(scope, thing_under_cursor)
+function s:get_matches(scope, thing)
     if a:scope ==# 'variable'
-        return s:variable_search(a:thing_under_cursor)
+        return s:variable_search(a:thing)
     elseif a:scope ==# 'local'
         return s:define_search()
     elseif a:scope ==# 'external'
-        return s:external_search(a:thing_under_cursor)
+        return s:external_search(a:thing)
     endif
 endfunction
 
@@ -79,15 +86,15 @@ function s:variable_search(variable) abort
 endfunction
 
 function s:define_search() abort
-    let current_word = expand('<cword>')
-    let dlist = split(execute('dlist ' . current_word), '\n')
+    let thing = expand('<cword>')
+    let dlist = split(execute('dlist ' . thing), '\n')
     let matches = []
     for line in dlist
         if line[0] =~# '\s'
             let definition_info = split(line)
             let line_nr = str2nr(definition_info[1])
             let definition = join(definition_info[2:])
-            let col = match(definition, current_word)
+            let col = match(definition, thing)
             call add(matches, [filename, line_nr, col+1])
         else
             let filename = line
@@ -145,15 +152,66 @@ function! s:do_echo_action(action, filename, line_nr, scope) abort
     if a:scope ==# 'variable'
         let contents = getline(a:line_nr, a:line_nr)
     else
-        let file_contents = readfile(a:filename)[a:line_nr-1:]
+        if a:filename ==# expand('%')
+            let file_contents = getline(a:line_nr, '$')
+        else
+            let file_contents = readfile(a:filename)[a:line_nr-1:]
+        endif
         let end_of_definition = match(file_contents, '^[^%]*\.\s*\(%.*\)\?$')
         let contents = file_contents[0:end_of_definition]
     endif
     if a:action ==# 'echo'
         echo join(contents, "\n")
-    else
+    elseif a:action ==# 'float'
         call s:display_in_float(contents)
     endif
+endfunction
+
+function! s:list_matches(matches, scope) abort
+    let current_filename = ''
+    for i in range(len(a:matches))
+        let [filename, line_nr, _] = a:matches[i]
+        if filename !=# current_filename
+            echohl Function | echo filename | echohl None
+            let current_filename = filename
+        endif
+        echohl None | echo '  ' . (i+1) | echohl None
+        let definition = join(readfile(filename)[line_nr-1:line_nr-1])
+        echohl None | echon '    ' . definition | echohl None
+    endfor
+    echohl WarningMsg | echo 'Input <count><action>. <action>: <g>oto, <s>plit, <v>split, <e>cho, <f>loat.' | echohl None
+    echohl WarningMsg | echo 'Anything else aborts.' | echohl None
+
+    let count = nr2char(getchar())
+    if count !~ '\d'
+        redraw
+        return
+    elseif count == 0
+        redraw
+        return s:echo_warning('Count cannot be zero')
+    elseif count > len(a:matches)
+        redraw
+        return s:echo_warning('Count higher than number of matches')
+    else
+        let action_abbreviation = nr2char(getchar())
+    endif
+
+    if 'gsvef' !~ action_abbreviation
+        redraw
+        return s:echo_warning('Action must be one of g, s, v, e or f')
+    endif
+
+    let action = {'g': 'edit', 's': 'split', 'v': 'vsplit', 'e': 'echo',
+                \ 'f': 'float'}[action_abbreviation]
+    let [filename, line_nr, col_nr] = a:matches[count-1]
+    if index(['edit', 'split', 'vsplit'], action) != -1
+        redraw
+        return s:do_edit_action(action, filename, line_nr, col_nr)
+    elseif index(['echo', 'float'], action) != -1
+        redraw
+        return s:do_echo_action(action, filename, line_nr, a:scope)
+    endif
+
 endfunction
 
 function! s:display_in_float(contents) abort
