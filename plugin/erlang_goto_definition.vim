@@ -6,8 +6,10 @@ let g:loaded_erlang_goto_definition = 1
 let s:saved_cpoptions = &cpoptions
 set cpoptions&vim
 
-let g:erlang_goto_definition_no_mappings = get(
-            \ g:, 'erlang_goto_definition_no_mappings', 0)
+let g:ErlangGotoDefinitionNoMappings = get(
+            \ g:, 'ErlangGotoDefinitionNoMappings', 0)
+let g:ErlangGotoDefinitionFindfile = get(
+            \ g:, 'ErlangGotoDefinitionFindFile', '')
 
 nnoremap <Plug>ErlangGotoDefinitionEdit
             \ :<C-U>call ErlangGotoDefinition#Do('edit',   v:count1)<CR>

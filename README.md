@@ -48,10 +48,25 @@ nmap {yourmapping} <Plug>ErlangGotoDefinitionList
 ```
 
 where `{yourmapping}` is the mapping you want to use. Set
-`g:erlang_goto_definition_no_mappings` to 1 to not define any default mappings.
+`g:ErlangGotoDefinitionNoMappings` to 1 to not define any default mappings.
 (If you define your own mappings, you don't need to set
-`g:erlang_goto_definition_no_mappings` to 1, the plugin won't overwrite your
+`g:ErlangGotoDefinitionNoMappings` to 1, the plugin won't overwrite your
 mappings).
+
+To find external modules, the vim `findfile` function is used by default. You
+can optionally add your own function to find the module if findfile is
+unsuccessful. Do this by providing a Funcref to
+`g:ErlangGotoDefinitionFindFile`. For example, if your function is called
+`MyFindFile`, you would do
+
+```vim
+let g:ErlangGotoDefinitionFindFile = function('MyFindFile')
+```
+
+Your function must take exactly one argument, the module name with the `.erl`
+extension and return the path to this module. The path can be absolute or
+relative to the current working directory. If no path is found, return an empty
+string.
 
 ## Support
 

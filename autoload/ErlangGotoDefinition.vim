@@ -126,13 +126,9 @@ endfunction
 
 function! s:find_file(fname) abort
     let path = findfile(a:fname)
-    if !empty(path)
-        return path
-    endif
-    " Taken from https://github.com/tpope/vim-fugitive/blob/master/autoload/fugitive.vim
-    if &includeexpr =~# '\<v:fname\>'
-        sandbox let fname = eval(substitute(&includeexpr, '\C\<v:fname\>', '\=string(a:fname)', 'g'))
-        let path = findfile(fname)
+    if empty(path) && !empty('g:ErlangGotoDefinitionFindFile')
+        let path = call(g:ErlangGotoDefinitionFindFile, [a:fname])
+        let path = findfile(path)
     endif
     return path
 endfunction
