@@ -1,4 +1,4 @@
-VADER_OUTPUT_FILE = vader_out
+VADER_OUTPUT_FILE = vader_output
 
 .PHONY : test
 test :
