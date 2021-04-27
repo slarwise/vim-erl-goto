@@ -1,5 +1,3 @@
-" TODO: Prioritize the found matches
-
 function ErlangGotoDefinition#Do(action, count) abort
     let thing = s:get_thing_under_cursor()
     let scope = s:get_scope(thing)
