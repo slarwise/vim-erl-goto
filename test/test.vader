@@ -96,6 +96,14 @@ Execute:
   call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual 'sub(X, Y) -> X - Y.', getline('.')
 
+Given erlang(External: goto function ref):
+  math:sub/2.
+
+Execute:
+  call writefile(['add(X, Y) -> X + Y.', 'sub(X, Y) -> X - Y.'], 'math.erl')
+  call ErlangGotoDefinition#Do('edit', v:count1)
+  AssertEqual 'sub(X, Y) -> X - Y.', getline('.')
+
 Given erlang(External: goto type):
   math:integer().
 

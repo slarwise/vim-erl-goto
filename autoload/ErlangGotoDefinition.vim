@@ -103,6 +103,8 @@ endfunction
 
 function s:external_search(thing) abort
     let [module, thing] = split(a:thing, ':')
+    let module = matchstr(module, '\i*$')
+    let thing = matchstr(thing, '^\i*')
     let filename = s:find_file(module . '.erl')
     if empty(filename)
         return []
