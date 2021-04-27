@@ -13,8 +13,6 @@ function ErlangGotoDefinition#Do(action, count) abort
         return s:echo_warning('Count higher than number of matches')
     endif
 
-    let context = s:get_context()
-
     try
         if a:action ==# 'list'
             return s:list_matches(matches, scope)
@@ -64,10 +62,6 @@ function! s:echo_warning(message) abort
     echohl WarningMsg
     echo 'ErlangGotoDefinition: ' . a:message
     echohl None
-endfunction
-
-function s:get_context() abort
-    return 'function'
 endfunction
 
 function s:variable_search(variable) abort
