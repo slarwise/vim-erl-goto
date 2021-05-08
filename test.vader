@@ -1,16 +1,4 @@
-" nvim -N -u NONE -c 'set runtimepath=.,$VIMRUNTIME,~/.config/nvim/plugged/vader.vim' -c 'runtime plugin/vader.vim' -c 'filetype plugin indent on' -c 'Vader!*' && echo Success || cat $VADER_OUTPUT_FILE
-
-" To test:
-"   - Variables:
-"     - Go to
-"     - Echo
-"   - Include (use the same file):
-"     - Goto function, record, macro, type, opaque
-"     - Echo function, record, macro, type, opaque
-"   - External:
-"     - Goto function, type, opaque
-"     - Echo function, type, opaque
-
+" Setup {{{1
 After:
   call delete('math.erl')
 
@@ -32,7 +20,7 @@ Expect erlang:
   X = 3,
   X.
 
-" Include in current file {{{1
+" Include function {{{1
 Given erlang(Include: goto function):
   add(X, Y) -> X + Y.
   sub(X, Y) -> X - Y.
@@ -48,6 +36,7 @@ Expect erlang:
   main() ->
     sub(1, 2).
 
+" Include record {{{1
 Given erlang(Include: goto record):
   -record(foo, {}).
   main() ->
@@ -61,33 +50,43 @@ Expect erlang:
   main() ->
     foo{}.
 
+" Include type {{{1
 Given erlang(Include: goto type):
-  -type(foo, {}).
-  main() ->
-    foo{}.
+  -type my_int() :: integer().
+  -spec (Var :: my_int()) -> ok.
 
 Do:
-  Ggdx
+  G/my\<CR>gdx
 
 Expect erlang:
-  -type(oo, {}).
-  main() ->
-    foo{}.
+  -type y_int() :: integer().
+  -spec (Var :: my_int()) -> ok.
 
+" Include type no space {{{1
+Given erlang(Include: goto type no space):
+  -type my_int() :: integer().
+  -spec (Var::my_int()) -> ok.
+
+Do:
+  G/my\<CR>gdx
+
+Expect erlang:
+  -type y_int() :: integer().
+  -spec (Var::my_int()) -> ok.
+
+" Include opaque {{{1
 Given erlang(Include: goto opaque):
-  -opaque(foo, {}).
-  main() ->
-    foo{}.
+  -opaque my_int() :: integer().
+  -spec (Var :: my_int()) -> ok.
 
 Do:
-  Ggdx
+  G/my\<CR>gdx
 
 Expect erlang:
-  -opaque(oo, {}).
-  main() ->
-    foo{}.
+  -opaque y_int() :: integer().
+  -spec (Var :: my_int()) -> ok.
 
-" External {{{1
+" External function {{{1
 Given erlang(External: goto function):
   math:sub(2, 1).
 
@@ -96,6 +95,7 @@ Execute:
   call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual 'sub(X, Y) -> X - Y.', getline('.')
 
+" External function ref {{{1
 Given erlang(External: goto function ref):
   math:sub/2.
 
@@ -104,6 +104,7 @@ Execute:
   call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual 'sub(X, Y) -> X - Y.', getline('.')
 
+" External type {{{1
 Given erlang(External: goto type):
   math:integer().
 
@@ -112,6 +113,7 @@ Execute:
   call ErlangGotoDefinition#Do('edit', v:count1)
   AssertEqual '-type integer() :: integer().', getline('.')
 
+" External opaque {{{1
 Given erlang(External: goto opaque):
   math:integer().
 
