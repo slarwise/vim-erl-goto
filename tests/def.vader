@@ -1,0 +1,27 @@
+Execute(init):
+  let path = 'file'
+  let start_line = 2
+  let end_line = 3
+  let start_col = 7
+  let lines = [
+    \ 'add(X, Y) ->',
+    \ '    X + Y.',
+    \ '-type my_int() ::',
+    \ '    integer().',
+    \ ]
+  let expected = {'path': path, 'line': start_line+1, 'col': start_col+1,
+    \ 'text': lines[2:3]}
+  let actual = erlgoto#def#init(path, start_line, end_line, start_col, lines)
+  AssertEqual expected, actual
+
+Execute(number_definitions):
+  let defs = [{}, {}, {}]
+  let expected = [{'nr': 1}, {'nr': 2}, {'nr': 3}]
+  let actual = erlgoto#def#number_definitions(defs)
+  AssertEqual expected, actual
+
+Execute(pad_line_nrs):
+  let defs = [{'line': 1}, {'line': 1000}]
+  let expected = [{'line': '   1'}, {'line': '1000'}]
+  let actual = erlgoto#def#pad_line_nrs(defs)
+  AssertEqual expected, actual
