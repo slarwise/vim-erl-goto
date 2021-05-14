@@ -49,22 +49,20 @@ function! erlgoto#main(config) abort
         endif
     endif
 
-    let count = config.count
-    let count_val_error = erlgoto#validate_count(count, definitions)
+    let count_val_error = erlgoto#validate_count(config.count, definitions)
     if empty(count_val_error)
-        let definition = definitions[count - 1]
+        let definition = definitions[config.count - 1]
     else
         return erlgoto#echo_warning(count_val_error)
     endif
 
-    let action = config.action
-    if action ==# 'edit'
+    if config.action ==# 'edit'
         return erlgoto#edit(definition)
-    elseif index(['split', 'vsplit'], action) != -1
-        return erlgoto#split(action, definition)
-    elseif action ==# 'echo'
+    elseif index(['split', 'vsplit'], config.action) != -1
+        return erlgoto#split(config.action, definition)
+    elseif config.action ==# 'echo'
         return erlgoto#echo(definition.text)
-    elseif action ==# 'float'
+    elseif config.action ==# 'float'
         return erlgoto#float(definition.text)
     endif
 endfunction
