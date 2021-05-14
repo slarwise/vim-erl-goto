@@ -5,7 +5,7 @@ let &l:define  = '^\ze\l\|^\s*-\%(define\|record\|type\|opaque\)'
 
 if !g:erlgoto_no_mappings
     if !hasmapto('<Plug>erlgoto_edit')   && empty(mapcheck('gd'))
-        nmap <unique><buffer><silent> gd         <Plug>erlgotoEdit
+        nmap <unique><buffer><silent> gd         <Plug>erlgoto_edit
     endif
     if !hasmapto('<Plug>erlgoto_split')  && empty(mapcheck("\<C-W>d"))
         nmap <unique><buffer><silent> <C-W>d     <Plug>erlgoto_split
@@ -16,7 +16,7 @@ if !g:erlgoto_no_mappings
     if !hasmapto('<Plug>erlgoto_echo')   && empty(mapcheck('[d'))
         nmap <unique><buffer><silent> [d         <Plug>erlgoto_echo
     endif
-    if !hasmapto('<Plug>erlgoto_list')   && empty(mapcheck('[D'))
-        nmap <unique><buffer><silent> [D         <Plug>erlgoto_list
+    if !hasmapto('<Plug>erlgoto_interactive')   && empty(mapcheck('[D'))
+        nmap <unique><buffer><silent> [D         <Plug>erlgoto_interactive
     endif
 endif
