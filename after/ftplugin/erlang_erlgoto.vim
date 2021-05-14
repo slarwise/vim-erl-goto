@@ -3,7 +3,7 @@ setlocal suffixesadd=.erl,.hrl
 let &l:include = '^\s*-\%(include\|include_lib\)\s*("\zs\f*\ze")'
 let &l:define  = '^\ze\l\|^\s*-\%(define\|record\|type\|opaque\)'
 
-if !g:erlgotoNoMappings
+if !g:erlgoto_no_mappings
     if !hasmapto('<Plug>erlgoto_edit')   && empty(mapcheck('gd'))
         nmap <unique><buffer><silent> gd         <Plug>erlgotoEdit
     endif
