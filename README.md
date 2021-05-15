@@ -1,4 +1,4 @@
-# vim-erlang-goto-definition
+# vim-erl-goto
 
 A (n)vim plugin for going to, and echoing, definitions and declarations in
 Erlang source code.
@@ -39,28 +39,26 @@ These mappings are defined by default
 To define your own mappings, do
 
 ```vimscript
-nmap {yourmapping} <Plug>ErlangGotoDefinitionEdit
-nmap {yourmapping} <Plug>ErlangGotoDefinitionSplit
-nmap {yourmapping} <Plug>ErlangGotoDefinitionVsplit
-nmap {yourmapping} <Plug>ErlangGotoDefinitionEcho
-nmap {yourmapping} <Plug>ErlangGotoDefinitionFloat
-nmap {yourmapping} <Plug>ErlangGotoDefinitionList
+nmap {yourmapping} <Plug>erlgoto_edit
+nmap {yourmapping} <Plug>erlgoto_split
+nmap {yourmapping} <Plug>erlgoto_vsplit
+nmap {yourmapping} <Plug>erlgoto_echo
+nmap {yourmapping} <Plug>erlgoto_float
+nmap {yourmapping} <Plug>erlgoto_interactive
 ```
 
 where `{yourmapping}` is the mapping you want to use. Set
-`g:ErlangGotoDefinitionNoMappings` to 1 to not define any default mappings.
-(If you define your own mappings, you don't need to set
-`g:ErlangGotoDefinitionNoMappings` to 1, the plugin won't overwrite your
-mappings).
+`g:erlgoto_no_mappings` to 1 to not define any default mappings. (If you
+define your own mappings, you don't need to set `g:erlgoto_no_mappings` to 1,
+the plugin won't overwrite your mappings).
 
 To find external modules, the vim `findfile` function is used by default. You
 can optionally add your own function to find the module if findfile is
-unsuccessful. Do this by providing a Funcref to
-`g:ErlangGotoDefinitionFindFile`. For example, if your function is called
-`MyFindFile`, you would do
+unsuccessful. Do this by providing a Funcref to `g:ErlgotoFindFile`. For
+example, if your function is called `MyFindFile`, you would do
 
 ```vim
-let g:ErlangGotoDefinitionFindFile = function('MyFindFile')
+let g:ErlgotoFindFile = function('MyFindFile')
 ```
 
 Your function must take exactly one argument, the module name with the `.erl`
