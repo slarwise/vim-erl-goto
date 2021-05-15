@@ -107,7 +107,7 @@ function! erlgoto#find#include_defs(cword) abort
                 let lines = readfile(path)[start_line:]
             endif
             let end_line = erlgoto#find#next_def_end(lines) + start_line
-            let col_nr = match(lines[0], a:cword) + 1
+            let col_nr = match(lines[0], a:cword)
             let position = {
                         \ 'path': path,
                         \ 'start_line': start_line,
