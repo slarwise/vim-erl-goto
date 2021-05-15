@@ -3,42 +3,12 @@ function! erlgoto#main(config) abort
     let line = getline('.')
     let col = col('.')
 
-    let var_under_cursor = erlgoto#find#var_in(line, col)
-    if !empty(var_under_cursor)
-        let lines = getline(1, '.')
-        let pos = erlgoto#find#var_def(var_under_cursor, lines)
-        if !empty(pos)
-            let def = erlgoto#def#init(expand('%'), pos.line, pos.line, pos.col, lines)
-            call add(definitions, def)
-        endif
-    endif
-
-    let external_under_cursor = erlgoto#find#external_in(line, col)
-    if !empty(external_under_cursor)
-        let [module, symbol] = external_under_cursor
-        let module_path = erlgoto#find#path(module . '.erl')
-        if !empty(module_path)
-            let lines = readfile(module_path)
-            let positions = erlgoto#find#external_defs(symbol, lines)
-            for pos in positions
-                let def = erlgoto#def#init(module_path, pos.start_line,
-                            \ pos.end_line, pos.col, lines)
-                call add(definitions, def)
-            endfor
-        endif
-    endif
-
-    let positions = erlgoto#find#include_defs(expand('<cword>'))
-    for pos in positions
-        let lines = readfile(pos.path)
-        let def = erlgoto#def#init(pos.path, pos.start_line, pos.end_line,
-                    \ pos.col, lines)
-        call add(definitions, def)
-    endfor
+    call extend(definitions, erlgoto#get_variable_definition(line, col))
+    call extend(definitions, erlgoto#get_external_definitions(line, col))
+    call extend(definitions, erlgoto#get_include_definitions())
 
     if empty(definitions)
         return erlgoto#echo_warning('No definitions found')
-    else
     endif
 
     let config = a:config
@@ -65,6 +35,56 @@ function! erlgoto#main(config) abort
     elseif config.action ==# 'float'
         return erlgoto#float(definition.text)
     endif
+endfunction
+
+function! erlgoto#get_variable_definition(line, col) abort
+    let var_under_cursor = erlgoto#find#var_in(a:line, a:col)
+    let definitions = []
+    if !empty(var_under_cursor)
+        let lines = getline(1, '.')
+        let pos = erlgoto#find#var_def(var_under_cursor, lines)
+        if !empty(pos)
+            let def = erlgoto#def#init(expand('%'), pos.line, pos.line, pos.col, lines)
+            call add(definitions, def)
+        endif
+    endif
+    return definitions
+endfunction
+
+function! erlgoto#get_external_definitions(line, col) abort
+    let external_under_cursor = erlgoto#find#external_in(a:line, a:col)
+    let definitions = []
+    if !empty(external_under_cursor)
+        let [module, symbol] = external_under_cursor
+        let module_path = erlgoto#find#path(module . '.erl')
+        if !empty(module_path)
+            let lines = readfile(module_path)
+            let positions = erlgoto#find#external_defs(symbol, lines)
+            let definitions = []
+            for pos in positions
+                let def = erlgoto#def#init(module_path, pos.start_line,
+                            \ pos.end_line, pos.col, lines)
+                call add(definitions, def)
+            endfor
+        endif
+    endif
+    return definitions
+endfunction
+
+function! erlgoto#get_include_definitions() abort
+    let positions = erlgoto#find#include_defs(expand('<cword>'))
+    let definitions = []
+    for pos in positions
+        if pos.path ==# expand('%')
+            let lines = getline(1, '$')
+        else
+            let lines = readfile(pos.path)
+        endif
+        let def = erlgoto#def#init(pos.path, pos.start_line, pos.end_line,
+                    \ pos.col, lines)
+        call add(definitions, def)
+    endfor
+    return definitions
 endfunction
 
 function! erlgoto#edit(def) abort
