@@ -1,0 +1,49 @@
+After:
+  call delete('math.erl')
+
+Given erlang(Test mappings):
+  .
+
+Execute(Test mappings):
+  AssertEqual maparg('gd'), '<Plug>erlgoto_edit'
+  AssertEqual maparg('<C-W>d'), '<Plug>erlgoto_split'
+  AssertEqual maparg('<C-W><C-D>'), '<Plug>erlgoto_vsplit'
+  AssertEqual maparg('[d'), '<Plug>erlgoto_echo'
+  AssertEqual maparg('[D'), '<Plug>erlgoto_interactive'
+
+Given erlang(Variable):
+  main(X) ->
+      X = 4.
+
+Do:
+  Gwgdx
+
+Expect erlang:
+  main() ->
+      X = 4.
+
+Given erlang(Include):
+  add(X, Y) ->
+      X + Y.
+  main(X) ->
+      add(1, 3).
+
+Do:
+  Gwgdx
+
+Expect erlang:
+  dd(X, Y) ->
+      X + Y.
+  main(X) ->
+      add(1, 3).
+
+Given erlang(External):
+  main() ->
+      math:add(1, 2).
+
+Execute():
+  let external_path = 'math.erl'
+  call writefile(['add(X, Y) ->', '    X + Y'], external_path)
+  normal Gwgd
+  AssertEqual 'add(X, Y) ->', getline('.')
+  call delete(external_path)
