@@ -135,6 +135,10 @@ Execute(external_defs):
           \ {'start_line': 0, 'end_line': 1, 'col': 0},
           \ {'start_line': 2, 'end_line': 3, 'col': 0},
         \ ]},
+    \ {'lines': ['f(0) ->', '    0;', 'f(1) ->', '    1.'],
+        \ 'expected': [
+          \ {'start_line': 0, 'end_line': 3, 'col': 0},
+        \ ]},
     \ {'lines': ['-type f() :: integer()'],
         \ 'expected': [{'start_line': 0, 'end_line': 0, 'col': 6}]},
     \ {'lines': ['-type f2() :: integer()', '-type f() :: integer()'],
