@@ -101,7 +101,11 @@ function! erlgoto#find#include_defs(cword) abort
     for line in dlist
         if line[0] =~# '\s'
             let start_line = str2nr(split(line)[1]) - 1
-            let lines = readfile(path)[start_line:]
+            if path ==# expand('%')
+                let lines = getline(start_line+1, '$')
+            else
+                let lines = readfile(path)[start_line:]
+            endif
             let end_line = erlgoto#find#next_def_end(lines) + start_line
             let col_nr = match(lines[0], a:cword) + 1
             let position = {
