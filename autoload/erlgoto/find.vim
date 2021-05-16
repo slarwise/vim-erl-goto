@@ -19,44 +19,40 @@ function! erlgoto#find#next_def_end(lines) abort
     endif
 endfunction
 
-" Could use matchstrpos and see if the start and end col encloses col
-" Use the start argument to continue if end col is before col
-" Same for external_in
 function! erlgoto#find#var_in(line, col) abort
-    let col_match = '\%' . a:col . 'c'
-    let pattern = '[#?'']\?\i*' . col_match . '\i\+'
-    let match = matchstr(a:line, pattern)
-    if match =~# '^[A-Z_]'
-        return match
-    else
-        return ''
-    endif
+    let var_pattern = '\C\%(^\|[^#?'']\<\zs\)[_A-Z]\i*'
+    " let var_pattern = '\%(^\|\<[^#?'']\<\)[_A-Z]\i*'
+    " let var_pattern = '\C[A-Z]\i*'
+    let match = erlgoto#find#pattern_in(a:line, a:col, var_pattern)
+    " echo match
+    return match
 endfunction
 
 function! erlgoto#find#external_in(line, col) abort
-    let char_under_cursor = a:line[a:col - 1]
-    let col_match = '\%' . a:col . 'c'
-    if char_under_cursor =~# '\i'
-        let patterns = [
-                    \ '\<\l\i*' . col_match . '\i\+:\l\i*',
-                    \ '\<\l\i*:\l\i*' . col_match . '\i*',
-                    \ ]
-        if char_under_cursor =~# '\l'
-            let patterns += [
-                        \ '\<' . col_match . '\l\i*:\l\i*',
-                        \ '\<\l\i*:' . col_match . '\l\i*'
-                        \ ]
-        endif
-        let pattern = join(patterns, '\|')
-        let match = matchstr(a:line, pattern)
-        return split(match, ':')
-    elseif char_under_cursor ==# ':'
-        let pattern = '\<\l\i*' . col_match . ':\l\i*'
-        let match = matchstr(a:line, pattern)
+    let external_pattern = '\C\%(^\|[^#?'']\<\zs\)\l\i*:\l\i*'
+    let match = erlgoto#find#pattern_in(a:line, a:col, external_pattern)
+    if !empty(match)
         return split(match, ':')
     else
         return []
     endif
+endfunction
+
+function! erlgoto#find#pattern_in(line, col, pattern) abort
+    let count = 1
+    while 1
+        let [match, start, end] = matchstrpos(a:line, a:pattern, 0, count)
+        if !empty(match)
+            if start <= a:col && a:col < end
+                return match
+            else
+                let count = count + 1
+            endif
+        else
+            break
+        endif
+    endwhile
+    return ''
 endfunction
 
 function! erlgoto#find#var_def(variable, lines) abort

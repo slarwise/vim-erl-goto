@@ -24,40 +24,44 @@ Execute(var_in different variable types):
   let lines = ['Var123', '_123Var', 'VAR_var', '_']
   for line in lines
     let expected = line
-    for col in range(1, len(line))
+    for col in range(len(line))
       let actual = erlgoto#find#var_in(line, col)
-      " Log 'col = ' . col . ', char = ' . line[col-1]
+      " Log 'col = ' . col . ', char = ' . line[col]
       AssertEqual expected, actual
     endfor
   endfor
 
 Execute(var_in non-variables):
   let lines = ['1', '1Var', 'atom', "'QuotedAtom'", '#record{}', '?MACRO',
-    \ 'function', 'module:function']
+    \ 'function', 'module:function', '    test2:f()']
   let expected = ''
   for line in lines
-    for col in range(1, len(line))
+    for col in range(len(line))
       let actual = erlgoto#find#var_in(line, col)
-      " Log 'col = ' . col . ', char = ' . line[col-1]
+      " Log 'col = ' . col . ', char = ' . line[col]
       AssertEqual expected, actual
     endfor
   endfor
 
 Execute(var_in variables in expressions):
   let inputs = [
-    \ {'line': 'Var = 3.', 'match': 'Var', 'match_cols': range(1, 3)},
-    \ {'line': 'Var/3.', 'match': 'Var', 'match_cols': range(1, 3)},
-    \ {'line': '{ok, Var} = fun(3).', 'match': 'Var', 'match_cols': range(6, 8)},
+    \ {'line': 'Var = 3.', 'match': 'Var', 'match_cols': range(0, 2)},
+    \ {'line': 'Var/3.', 'match': 'Var', 'match_cols': range(0, 2)},
+    \ {'line': '{ok, Var} = fun(3).', 'match': 'Var', 'match_cols': range(5, 7)},
+    \ {'line': '    test2:sub(X),', 'match': 'X', 'match_cols': range(14, 14)},
     \ ]
   for input in inputs
-    for col in range(1, len(input.line))
+    for col in range(len(input.line))
       if index(input.match_cols, col) > -1
         let expected = input.match
       else
         let expected = ''
       endif
-      " Log 'col = ' . col . ', char = ' . input.line[col-1]
+      Log input.line
+      Log col
+      Log 'col = ' . col . ', char = ' . input.line[col]
       let actual = erlgoto#find#var_in(input.line, col)
+      Log actual
       AssertEqual expected, actual
     endfor
   endfor
@@ -66,41 +70,41 @@ Execute(external_in different lengths):
   let lines = ['m:s', 'module:symbol']
   for line in lines
     let expected = split(line, ':')
-    for col in range(1, len(line))
+    for col in range(len(line))
       let actual = erlgoto#find#external_in(line, col)
-      " Log 'col = ' . col . ', char = ' . line[col-1]
+      " Log 'col = ' . col . ', char = ' . line[col]
       AssertEqual expected, actual
     endfor
   endfor
 
 Execute(external_in non-externals):
   let lines = ['1', '1Var', 'atom', "'QuotedAtom'", '#record{}', '?MACRO',
-    \ ':symbol', 'module:', ':s', 'm:']
+    \ ':symbol', 'module:', ':s', 'm:', '?mod:sym']
   let expected = []
   for line in lines
-    for col in range(1, len(line))
+    for col in range(len(line))
       let actual = erlgoto#find#external_in(line, col)
-      " Log 'col = ' . col . ', char = ' . line[col-1]
+      " Log 'col = ' . col . ', char = ' . line[col]
       AssertEqual expected, actual
     endfor
   endfor
 
 Execute(external_in externals in expressions):
   let inputs = [
-    \ {'line': 'Var = mod:fun().', 'match': ['mod', 'fun'], 'match_cols': range(7, 13)},
-    \ {'line': 'Var :: mod:type().', 'match': ['mod', 'type'], 'match_cols': range(8, 15)},
-    \ {'line': 'Var::mod:type().', 'match': ['mod', 'type'], 'match_cols': range(6, 13)},
-    \ {'line': 'fun mod:fun/3.', 'match': ['mod', 'fun'], 'match_cols': range(5, 11)},
-    \ {'line': '[fun mod:fun/3, fun/3].', 'match': ['mod', 'fun'], 'match_cols': range(6, 12)},
+    \ {'line': 'Var = mod:fun().', 'match': ['mod', 'fun'], 'match_cols': range(6, 12)},
+    \ {'line': 'Var :: mod:type().', 'match': ['mod', 'type'], 'match_cols': range(7, 14)},
+    \ {'line': 'Var::mod:type().', 'match': ['mod', 'type'], 'match_cols': range(5, 12)},
+    \ {'line': 'fun mod:fun/3.', 'match': ['mod', 'fun'], 'match_cols': range(4, 10)},
+    \ {'line': '[fun mod:fun/3, fun/3].', 'match': ['mod', 'fun'], 'match_cols': range(5, 11)},
     \ ]
   for input in inputs
-    for col in range(1, len(input.line))
+    for col in range(len(input.line))
       if index(input.match_cols, col) > -1
         let expected = input.match
       else
         let expected = []
       endif
-      " Log 'col = ' . col . ', char = ' . input.line[col-1]
+      " Log 'col = ' . col . ', char = ' . input.line[col]
       let actual = erlgoto#find#external_in(input.line, col)
       AssertEqual expected, actual
     endfor

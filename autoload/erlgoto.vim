@@ -1,10 +1,12 @@
 function! erlgoto#main(config) abort
     let definitions = []
     let line = getline('.')
-    let col = col('.')
+    let col = col('.') - 1
 
     call extend(definitions, erlgoto#get_variable_definition(line, col))
     call extend(definitions, erlgoto#get_external_definitions(line, col))
+    " If there are external matches we should probably not check for include
+    " matches
     call extend(definitions, erlgoto#get_include_definitions())
 
     if empty(definitions)
@@ -38,7 +40,9 @@ function! erlgoto#main(config) abort
 endfunction
 
 function! erlgoto#get_variable_definition(line, col) abort
+    " echo a:line
     let var_under_cursor = erlgoto#find#var_in(a:line, a:col)
+    " echo var_under_cursor
     let definitions = []
     if !empty(var_under_cursor)
         let lines = getline(1, '.')

@@ -47,3 +47,15 @@ Execute():
   normal Gwgd
   AssertEqual 'add(X, Y) ->', getline('.')
   call delete(external_path)
+
+Given erlang(External):
+  main() ->
+      X = math:add(1, 2),
+      math:add(1, 2).
+
+Execute():
+  let external_path = 'math.erl'
+  call writefile(['add(X, Y) ->', '    X + Y'], external_path)
+  normal Gwgd
+  AssertEqual 'add(X, Y) ->', getline('.')
+  call delete(external_path)
